@@ -13,5 +13,6 @@ Requires-Dist: opencv-python>=4.10; extra == "planet-perception"
 Requires-Dist: ultralytics<9,>=8.4; extra == "planet-perception"
 Provides-Extra: ml
 Requires-Dist: torch>=2.2; extra == "ml"
+Requires-Dist: torchvision>=0.17; extra == "ml"
 Provides-Extra: dev
 Requires-Dist: pytest>=8.0; extra == "dev"

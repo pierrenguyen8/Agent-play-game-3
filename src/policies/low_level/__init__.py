@@ -11,3 +11,7 @@ __all__ = [
     "LowLevelPrediction",
     "decode_held_transition",
 ]
+
+from .pixelbc_lstm import PixelBCLSTMConfig, PixelBCLSTMPolicy
+
+__all__ += ["PixelBCLSTMConfig", "PixelBCLSTMPolicy"]

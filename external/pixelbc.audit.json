@@ -1,0 +1,69 @@
+{
+  "repository": "https://github.com/microsoft/imitation_learning_in_modern_video_games.git",
+  "commit": "d0dca5ab3882c56a8a53c99e2987feadd3961a5f",
+  "files": [
+    {
+      "path": "pixelbc/models/bc_model.py",
+      "sha256": "8157bd04a2a6d40cfdec79f5e1fcbc709cabb5e5002ef331d9f41d036d612aab",
+      "symbols": {
+        "classes": [
+          "BCModel"
+        ],
+        "functions": [
+          "__init__",
+          "_get_embedding",
+          "_split_action_logits",
+          "_split_action_targets",
+          "_step",
+          "act",
+          "configure_optimizers",
+          "forward",
+          "init_for_rollout",
+          "on_before_optimizer_step",
+          "test_step",
+          "training_step",
+          "validation_step"
+        ]
+      },
+      "token_counts": {
+        "LSTM": 0,
+        "button": 63,
+        "binary_cross_entropy": 0,
+        "BCE": 0,
+        "CrossEntropy": 0,
+        "sequence_length": 9
+      }
+    },
+    {
+      "path": "pixelbc/models/utils/model_utils.py",
+      "sha256": "dc2feb320c165b8b31f670c0ce498d1f610efa8bcfd24ce60ce8ef4cb9af1f6e",
+      "symbols": {
+        "classes": [
+          "BackboneModel",
+          "LSTM",
+          "MLP"
+        ],
+        "functions": [
+          "__init__",
+          "count_parameters",
+          "forward",
+          "init_for_sequence",
+          "verify_input_shape"
+        ]
+      },
+      "token_counts": {
+        "LSTM": 24,
+        "button": 0,
+        "binary_cross_entropy": 0,
+        "BCE": 0,
+        "CrossEntropy": 0,
+        "sequence_length": 1
+      }
+    }
+  ],
+  "integration_target": {
+    "policy": "LSTM temporal policy",
+    "action_representation": "binary held button vector",
+    "planet_conditioning": "intent_id + skill_id remain in our thin adapter"
+  }
+}

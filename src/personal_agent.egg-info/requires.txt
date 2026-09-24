@@ -4,6 +4,7 @@ pytest>=8.0
 
 [ml]
 torch>=2.2
+torchvision>=0.17
 
 [planet-perception]
 Pillow>=10.0

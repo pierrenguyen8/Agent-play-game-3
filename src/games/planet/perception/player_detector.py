@@ -14,12 +14,16 @@ class YOLOPlayerDetector:
         *,
         confidence: float = 0.25,
         device: int | str | None = None,
+        tracking: bool = True,
+        tracker: str = "bytetrack.yaml",
     ) -> None:
         self._detector = YOLODetector(
             model_path,
             confidence=confidence,
             device=device,
             label="player",
+            tracking=tracking,
+            tracker=tracker,
         )
 
     def predict(self, frame: CapturedFrame) -> Detection | None:

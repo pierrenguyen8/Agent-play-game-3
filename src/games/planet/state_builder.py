@@ -19,6 +19,7 @@ class PlanetStateBuilder:
         )
         return WorldState(
             player=player,
+            player_observed=(perception.player_observed and player is not None),
             enemies=enemies,
             platforms=platforms,
             loot=loot,

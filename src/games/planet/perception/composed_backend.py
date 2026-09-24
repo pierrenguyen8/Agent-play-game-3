@@ -42,6 +42,7 @@ class ComposedPlanetPerceptionBackend:
 
         return PlanetPerception(
             player=player,
+            player_observed=player is not None,
             enemies=tuple(enemies),
             platforms=tuple(platforms),
             timestamp_ns=frame.timestamp_ns,

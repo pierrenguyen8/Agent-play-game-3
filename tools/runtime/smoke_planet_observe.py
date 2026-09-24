@@ -16,6 +16,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _player_status(state) -> str:
+    if state.player is None:
+        return "lost"
+    return "fresh" if state.player_observed else "held"
+
+
 def main() -> None:
     args = parse_args()
     if args.frames <= 0:
@@ -35,11 +41,10 @@ def main() -> None:
 
             decision = observation.decision
             state = decision.state
-            player = "yes" if state.player is not None else "no"
             print(
                 f"[{completed + 1:03d}/{args.frames:03d}] "
                 f"{observation.width}x{observation.height} "
-                f"player={player} enemies={len(state.enemies)} "
+                f"player={_player_status(state)} enemies={len(state.enemies)} "
                 f"platforms={len(state.platforms)} "
                 f"intent={decision.intent.value} skill={decision.skill.value}"
             )

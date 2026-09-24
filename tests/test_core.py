@@ -40,7 +40,9 @@ def test_held_transition_decoder():
 
 def test_rule_policy_is_debuggable_baseline():
     policy = RuleBasedHighLevelPolicy()
-    assert policy.decide(WorldState()) == Intent.EXPLORE
+    assert policy.decide(WorldState()) == Intent.IDLE
     enemy = EntityState(Position2D(10, 20))
-    assert policy.decide(WorldState(enemies=(enemy,))) == Intent.COMBAT
-    assert policy.decide(WorldState(stuck=True)) == Intent.UNSTUCK
+    assert policy.decide(WorldState(enemies=(enemy,))) == Intent.IDLE
+    player = EntityState(Position2D(0, 0))
+    assert policy.decide(WorldState(player=player, enemies=(enemy,))) == Intent.COMBAT
+    assert policy.decide(WorldState(player=player, stuck=True)) == Intent.UNSTUCK

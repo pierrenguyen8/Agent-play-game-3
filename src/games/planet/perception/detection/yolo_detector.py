@@ -10,8 +10,9 @@ from games.planet.perception.types import Box, Detection
 class YOLODetector:
     """Thin adapter around an Ultralytics detection checkpoint.
 
-    The rest of the agent only sees canonical ``Detection`` values. This keeps
-    Ultralytics-specific result objects from leaking into Agent Core.
+    Ultralytics-specific results stay inside this module. When ``tracking`` is
+    enabled, consecutive frames use the selected tracker with ``persist=True``
+    so stable track IDs can be exposed through canonical ``Detection`` values.
     """
 
     def __init__(
@@ -21,6 +22,8 @@ class YOLODetector:
         confidence: float = 0.25,
         device: int | str | None = None,
         label: str | None = None,
+        tracking: bool = False,
+        tracker: str = "bytetrack.yaml",
     ) -> None:
         if not 0.0 <= confidence <= 1.0:
             raise ValueError("confidence must be in [0, 1]")
@@ -28,6 +31,8 @@ class YOLODetector:
         self.confidence = confidence
         self.device = device
         self.label = label
+        self.tracking = tracking
+        self.tracker = tracker
         self._model: Any | None = None
 
     def _ensure_loaded(self) -> None:
@@ -47,20 +52,54 @@ class YOLODetector:
         self._ensure_loaded()
         assert self._model is not None
 
-        try:
-            from PIL import Image
-        except ImportError as exc:
-            raise RuntimeError(
-                "YOLO perception requires Pillow via the 'planet-perception' extra"
-            ) from exc
+        if self.tracking:
+            try:
+                import numpy as np
+            except ImportError as exc:
+                raise RuntimeError(
+                    "YOLO tracking requires NumPy via the "
+                    "'planet-perception' extra"
+                ) from exc
 
-        image = Image.frombytes("RGB", (frame.width, frame.height), frame.rgb)
-        results = self._model.predict(
-            source=image,
-            conf=self.confidence,
-            device=self.device,
-            verbose=False,
-        )
+            # Ultralytics interprets HWC uint8 NumPy inputs as BGR.
+            # CapturedFrame.rgb is packed RGB, so reverse channels before
+            # entering the tracking path. Copy to avoid a negative-stride view.
+            rgb = np.frombuffer(frame.rgb, dtype=np.uint8).reshape(
+                frame.height,
+                frame.width,
+                3,
+            )
+            image = rgb[:, :, ::-1].copy()
+            results = self._model.track(
+                source=image,
+                conf=self.confidence,
+                device=self.device,
+                tracker=self.tracker,
+                persist=True,
+                verbose=False,
+            )
+        else:
+            try:
+                from PIL import Image
+            except ImportError as exc:
+                raise RuntimeError(
+                    "YOLO perception requires Pillow via the "
+                    "'planet-perception' extra"
+                ) from exc
+
+            # Preserve the proven Step-2 inference contract: PIL inputs are RGB.
+            image = Image.frombytes(
+                "RGB",
+                (frame.width, frame.height),
+                frame.rgb,
+            )
+            results = self._model.predict(
+                source=image,
+                conf=self.confidence,
+                device=self.device,
+                verbose=False,
+            )
+
         if not results:
             return ()
 
@@ -75,10 +114,21 @@ class YOLODetector:
             if getattr(boxes, "cls", None) is not None
             else [None] * len(xyxy)
         )
+        raw_track_ids = getattr(boxes, "id", None)
+        track_ids = (
+            raw_track_ids.detach().cpu().tolist()
+            if raw_track_ids is not None
+            else [None] * len(xyxy)
+        )
         names = getattr(results[0], "names", {}) or {}
 
         detections: list[Detection] = []
-        for coords, score, class_id in zip(xyxy, confidences, class_ids):
+        for coords, score, class_id, track_id in zip(
+            xyxy,
+            confidences,
+            class_ids,
+            track_ids,
+        ):
             x1, y1, x2, y2 = (float(value) for value in coords[:4])
             x1 = max(0.0, min(x1, float(frame.width - 1)))
             y1 = max(0.0, min(y1, float(frame.height - 1)))
@@ -94,6 +144,7 @@ class YOLODetector:
                     box=Box(x1=x1, y1=y1, x2=x2, y2=y2),
                     confidence=float(score),
                     label=label,
+                    track_id=(None if track_id is None else int(track_id)),
                 )
             )
 

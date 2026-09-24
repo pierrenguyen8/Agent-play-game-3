@@ -23,6 +23,7 @@ class PlatformState:
 @dataclass(frozen=True, slots=True)
 class WorldState:
     player: EntityState | None = None
+    player_observed: bool = False
     enemies: tuple[EntityState, ...] = ()
     platforms: tuple[PlatformState, ...] = ()
     loot: tuple[EntityState, ...] = ()

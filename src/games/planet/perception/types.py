@@ -32,6 +32,7 @@ class Detection:
     box: Box
     confidence: float
     label: str | None = None
+    track_id: int | None = None
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:
@@ -59,3 +60,4 @@ class PlanetPerception:
     timestamp_ns: int | None = None
     frame_width: int | None = None
     frame_height: int | None = None
+    player_observed: bool = False

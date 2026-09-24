@@ -7,6 +7,7 @@ from .types import SkillType
 
 class SkillManager:
     _MAP = {
+        Intent.IDLE: SkillType.IDLE,
         Intent.EXPLORE: SkillType.EXPLORE,
         Intent.MOVE: SkillType.MOVE,
         Intent.COMBAT: SkillType.COMBAT,

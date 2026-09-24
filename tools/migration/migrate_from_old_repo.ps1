@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$OldRepo,
 
-    [string]$NewRepo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")),
+    [string]$NewRepo,
 
     [switch]$IncludeRawData,
     [switch]$IncludeProcessedData
@@ -10,19 +10,36 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ([string]::IsNullOrWhiteSpace($NewRepo)) {
+    if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+        throw "Cannot determine repository root. Pass -NewRepo explicitly."
+    }
+    $NewRepo = [System.IO.Path]::GetFullPath(
+        (Join-Path $PSScriptRoot "..\..")
+    )
+}
+
+$OldRepo = [System.IO.Path]::GetFullPath($OldRepo)
+$NewRepo = [System.IO.Path]::GetFullPath($NewRepo)
+
+if (-not (Test-Path -LiteralPath $OldRepo -PathType Container)) {
+    throw "Old repo not found: $OldRepo"
+}
+
+New-Item -ItemType Directory -Force -Path $NewRepo | Out-Null
+
 function Copy-IfExists {
     param([string]$Source, [string]$Destination)
-    if (Test-Path $Source) {
+    if (Test-Path -LiteralPath $Source) {
         $parent = Split-Path $Destination -Parent
         New-Item -ItemType Directory -Force -Path $parent | Out-Null
-        Copy-Item -Recurse -Force $Source $Destination
+        Copy-Item -LiteralPath $Source -Destination $Destination -Recurse -Force
         Write-Host "COPIED: $Source -> $Destination"
     } else {
         Write-Host "SKIP (missing): $Source"
     }
 }
 
-# Selected best weights only — no generated training directories.
 Copy-IfExists `
     (Join-Path $OldRepo "runs\detect\training_runs\planet\player_detector\weights\best.pt") `
     (Join-Path $NewRepo "artifacts\planet\perception\player\best.pt")
@@ -35,7 +52,6 @@ Copy-IfExists `
     (Join-Path $OldRepo "data\perception\planet\platform\training_runs\platform_detector\best.pt") `
     (Join-Path $NewRepo "artifacts\planet\perception\platform\best.pt")
 
-# Legacy low-level checkpoint is benchmark-only.
 Copy-IfExists `
     (Join-Path $OldRepo "data\low_level\planet\training_runs\final_temporal_v1\best.pt") `
     (Join-Path $NewRepo "artifacts\legacy\low_level\final_temporal_v1_best.pt")

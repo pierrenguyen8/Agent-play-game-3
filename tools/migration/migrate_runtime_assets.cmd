@@ -1,6 +1,7 @@
 @echo off
 setlocal
-cd /d "%~dp0\..\.."
+set "NEW_REPO=%~dp0\..\.."
+for %%I in ("%NEW_REPO%") do set "NEW_REPO=%%~fI"
 
 if "%~1"=="" (
     echo Usage: tools\migration\migrate_runtime_assets.cmd OLD_REPO_PATH
@@ -8,6 +9,5 @@ if "%~1"=="" (
     exit /b 2
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0migrate_from_old_repo.ps1" -OldRepo "%~1"
-set EXITCODE=%ERRORLEVEL%
-exit /b %EXITCODE%
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0migrate_from_old_repo.ps1" -OldRepo "%~1" -NewRepo "%NEW_REPO%"
+exit /b %ERRORLEVEL%

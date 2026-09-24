@@ -1,0 +1,12 @@
+[game]
+id = "planet"
+
+[low_level]
+provider = "unconfigured"
+action_representation = "held_state"
+
+[artifacts]
+player_detector = "artifacts/planet/perception/player/best.pt"
+enemy_detector = "artifacts/planet/perception/enemy/best.pt"
+platform_detector = "artifacts/planet/perception/platform/best.pt"
+legacy_low_level_baseline = "artifacts/legacy/low_level/final_temporal_v1_best.pt"

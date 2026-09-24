@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: personal-agent
+Version: 0.1.0
+Summary: Reuse-first multi-game personal agent with Planet as the first adapter.
+Requires-Python: <3.13,>=3.11
+Provides-Extra: planet-runtime
+Requires-Dist: mss>=9.0; extra == "planet-runtime"
+Requires-Dist: numpy>=1.26; extra == "planet-runtime"
+Requires-Dist: pynput>=1.7; extra == "planet-runtime"
+Provides-Extra: ml
+Requires-Dist: torch>=2.2; extra == "ml"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"

@@ -1,0 +1,11 @@
+
+[dev]
+pytest>=8.0
+
+[ml]
+torch>=2.2
+
+[planet-runtime]
+mss>=9.0
+numpy>=1.26
+pynput>=1.7

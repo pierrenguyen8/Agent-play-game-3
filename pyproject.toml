@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "personal-agent"
+version = "0.1.0"
+description = "Reuse-first multi-game personal agent with Planet as the first adapter."
+requires-python = ">=3.11,<3.13"
+dependencies = []
+
+[project.optional-dependencies]
+planet-runtime = [
+  "mss>=9.0",
+  "numpy>=1.26",
+  "pynput>=1.7",
+]
+ml = [
+  "torch>=2.2",
+]
+dev = [
+  "pytest>=8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

@@ -2,5 +2,6 @@ agent_core
 data
 games
 interfaces
+models
 policies
 runtime

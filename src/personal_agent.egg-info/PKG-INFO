@@ -4,9 +4,13 @@ Version: 0.1.0
 Summary: Reuse-first multi-game personal agent with Planet as the first adapter.
 Requires-Python: <3.13,>=3.11
 Provides-Extra: planet-runtime
-Requires-Dist: mss>=9.0; extra == "planet-runtime"
+Requires-Dist: mss>=10.0; extra == "planet-runtime"
 Requires-Dist: numpy>=1.26; extra == "planet-runtime"
 Requires-Dist: pynput>=1.7; extra == "planet-runtime"
+Provides-Extra: planet-perception
+Requires-Dist: Pillow>=10.0; extra == "planet-perception"
+Requires-Dist: opencv-python>=4.10; extra == "planet-perception"
+Requires-Dist: ultralytics<9,>=8.4; extra == "planet-perception"
 Provides-Extra: ml
 Requires-Dist: torch>=2.2; extra == "ml"
 Provides-Extra: dev

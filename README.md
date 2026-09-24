@@ -29,43 +29,6 @@ AgentRuntime
 The old CNN/GRU temporal experiments are deliberately **not** copied into `src/`.
 Their valuable datasets/checkpoints can be migrated as assets for benchmarking.
 
-## Setup
-
-Recommended on Windows / VS Code:
-
-```powershell
-.\setup_env.ps1
-.\.venv\Scripts\Activate.ps1
-```
-
-The setup script creates `.venv`, upgrades packaging tools, installs the
-Planet runtime + development dependencies, and runs the test suite. VS Code
-is configured to prefer `.venv\Scripts\python.exe`.
-
-ML dependencies are intentionally optional while the reuse-first low-level
-policy is being selected. Install them when needed:
-
-```powershell
-.\setup_env.ps1 -WithML
-```
-
-To rebuild the environment from scratch:
-
-```powershell
-.\setup_env.ps1 -Recreate
-```
-
-## Migrate useful assets from the old repository
-
-```powershell
-.\tools\migration\migrate_from_old_repo.ps1 `
-    -OldRepo "F:\tailieu\Agent-play-game-2" `
-    -IncludeProcessedData
-```
-
-See `docs/migration.md` before deleting the old repository.
-
-
 ## Windows environment setup
 
 Recommended (works even when PowerShell script execution is disabled):
@@ -74,11 +37,63 @@ Recommended (works even when PowerShell script execution is disabled):
 .\setup_env.cmd
 ```
 
-The bootstrap auto-detects Python 3.11 or 3.12 and creates `.venv`.
-To include ML dependencies later:
+The bootstrap prefers Python 3.12, falls back to 3.11, creates `.venv`, installs
+the base Planet runtime + development dependencies, and runs the tests.
+
+For the live Planet perception milestone, install the optional perception/ML stack:
 
 ```powershell
 .\setup_env.cmd -WithML
 ```
 
-You do not need to activate the environment to use it; you can call `.\.venv\Scripts\python.exe` directly.
+To rebuild the environment from scratch:
+
+```powershell
+.\setup_env.cmd -Recreate
+```
+
+Activation is optional. You can always run the environment directly with:
+
+```powershell
+.\.venv\Scripts\python.exe <command>
+```
+
+## Step 2: migrate Planet runtime assets
+
+The production runtime now has one canonical observation path:
+
+```text
+Planet client window
+  -> one MSS frame
+  -> player + enemy + platform perception
+  -> PlanetPerception
+  -> WorldState
+  -> intent + skill
+```
+
+Copy only the three selected perception checkpoints from the old repository:
+
+```powershell
+.\tools\migration\migrate_runtime_assets.cmd "F:\tailieu\Agent-play-game-2"
+```
+
+Then open Planet, keep it in the foreground, and run the **read-only** smoke test:
+
+```powershell
+python tools\runtime\smoke_planet_observe.py --frames 30
+```
+
+No keyboard input is sent by that smoke test. See `docs/runtime_milestone.md`.
+
+## Optional legacy benchmark assets
+
+If old raw/processed datasets are needed later for benchmarking, the broader
+migration tool remains available:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\migration\migrate_from_old_repo.ps1 `
+    -OldRepo "F:\tailieu\Agent-play-game-2" `
+    -IncludeProcessedData
+```
+
+See `docs/migration.md` before deleting the old repository.

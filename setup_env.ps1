@@ -44,7 +44,7 @@ function Test-PythonCandidate {
 
 function Find-CompatiblePython {
     if (Get-Command py -ErrorAction SilentlyContinue) {
-        foreach ($selector in @("-3.11", "-3.12")) {
+        foreach ($selector in @("-3.12", "-3.11")) {
             $candidate = Test-PythonCandidate -Command "py" -PrefixArgs @($selector)
             if ($null -ne $candidate) {
                 return $candidate
@@ -113,7 +113,7 @@ if ($LASTEXITCODE -ne 0) {
 
 $Extras = "dev,planet-runtime"
 if ($WithML) {
-    $Extras = "dev,planet-runtime,ml"
+    $Extras = "dev,planet-runtime,planet-perception,ml"
 }
 
 Write-Host "Installing Personal Agent [$Extras]..."
@@ -138,7 +138,7 @@ Write-Host "  .\.venv\Scripts\python.exe <command>"
 
 if (-not $WithML) {
     Write-Host ""
-    Write-Host "ML dependencies were not installed."
+    Write-Host "Perception/ML dependencies were not installed."
     Write-Host "When needed, run:"
     Write-Host "  .\setup_env.cmd -WithML"
 }

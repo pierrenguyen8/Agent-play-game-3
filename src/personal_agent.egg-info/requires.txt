@@ -5,7 +5,12 @@ pytest>=8.0
 [ml]
 torch>=2.2
 
+[planet-perception]
+Pillow>=10.0
+opencv-python>=4.10
+ultralytics<9,>=8.4
+
 [planet-runtime]
-mss>=9.0
+mss>=10.0
 numpy>=1.26
 pynput>=1.7

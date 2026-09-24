@@ -1,6 +1,7 @@
 from .generic_action import (
     AbilityAction,
     AttackAction,
+    ControlStateAction,
     GenericAction,
     InteractAction,
     JumpAction,
@@ -11,6 +12,7 @@ from .generic_action import (
 __all__ = [
     "AbilityAction",
     "AttackAction",
+    "ControlStateAction",
     "GenericAction",
     "InteractAction",
     "JumpAction",

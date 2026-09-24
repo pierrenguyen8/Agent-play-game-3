@@ -46,3 +46,42 @@ def test_rule_policy_is_debuggable_baseline():
     player = EntityState(Position2D(0, 0))
     assert policy.decide(WorldState(player=player, enemies=(enemy,))) == Intent.COMBAT
     assert policy.decide(WorldState(player=player, stuck=True)) == Intent.UNSTUCK
+
+
+def test_planet_control_codec_supports_simultaneous_controls():
+    from games.planet.low_level import PlanetControlCodec
+
+    codec = PlanetControlCodec(num_ability_slots=2)
+    action = codec.decode_held(
+        (False, True, False, False, True, True, False, True, False)
+    )
+    assert action.move_x == 1.0
+    assert action.jump is True
+    assert action.attack is True
+    assert action.abilities == (True, False)
+
+
+def test_planet_control_codec_neutralizes_direction_conflicts():
+    from games.planet.low_level import PlanetControlCodec
+
+    codec = PlanetControlCodec(num_ability_slots=0)
+    action = codec.decode_held((True, True, True, True, False, False, False))
+    assert action.move_x == 0.0
+    assert action.move_y == 0.0
+
+
+def test_planet_adapter_control_state_holds_combined_inputs():
+    from agent_core.actions import ControlStateAction
+
+    controller = DryRunInputController()
+    adapter = PlanetAdapter(controller)
+    adapter.execute(ControlStateAction(move_x=1.0, jump=True, attack=True))
+    assert controller.keys_down == {"right", "space", "ctrl"}
+
+    # Repeating the same frame-level state must not generate repeat key-downs.
+    event_count = len(controller.events)
+    adapter.execute(ControlStateAction(move_x=1.0, jump=True, attack=True))
+    assert len(controller.events) == event_count
+
+    adapter.execute(ControlStateAction())
+    assert controller.keys_down == set()

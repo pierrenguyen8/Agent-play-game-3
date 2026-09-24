@@ -30,6 +30,23 @@ class AbilityAction:
 
 
 @dataclass(frozen=True, slots=True)
+class ControlStateAction:
+    """Frame-level semantic control state for BC-style policies.
+
+    Unlike the atomic actions above, this action can represent simultaneous
+    controls such as moving right while attacking. The game adapter owns the
+    mapping from these semantic controls to physical keys or buttons.
+    """
+
+    move_x: float = 0.0
+    move_y: float = 0.0
+    jump: bool = False
+    attack: bool = False
+    interact: bool = False
+    abilities: tuple[bool, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class StopAction:
     pass
 
@@ -40,5 +57,6 @@ GenericAction: TypeAlias = (
     | AttackAction
     | InteractAction
     | AbilityAction
+    | ControlStateAction
     | StopAction
 )

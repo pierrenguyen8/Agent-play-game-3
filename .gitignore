@@ -15,3 +15,6 @@ runs/
 # Local config
 .env
 *.local.yaml
+
+# Reused upstream source checkouts (record commit separately)
+external/pixelbc/

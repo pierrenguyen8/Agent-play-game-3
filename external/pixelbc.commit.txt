@@ -1,0 +1,4 @@
+﻿repository=https://github.com/microsoft/imitation_learning_in_modern_video_games.git
+ref=main
+commit=d0dca5ab3882c56a8a53c99e2987feadd3961a5f
+license=MIT

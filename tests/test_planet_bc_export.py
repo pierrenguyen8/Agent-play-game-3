@@ -7,6 +7,7 @@ from data.low_level import BCSequenceIndex
 from games.planet.config import PlanetBindings
 from games.planet.low_level.dataset_export import (
     PlanetBCExportConfig,
+    _split_sessions,
     export_planet_bc_dataset,
     held_vector_from_keys,
 )
@@ -57,7 +58,7 @@ def _write_session(
 
 def test_held_vector_uses_planet_order_and_modifier_aliases() -> None:
     held = held_vector_from_keys(
-        ("right", "ctrl_l", "space", "2"),
+        ("right", "ctrl_l", "alt_l", "shift_l", "a", "z", "x"),
         bindings=PlanetBindings(),
         num_ability_slots=4,
     )
@@ -69,10 +70,10 @@ def test_held_vector_uses_planet_order_and_modifier_aliases() -> None:
         True,
         True,
         False,
-        False,
         True,
-        False,
-        False,
+        True,
+        True,
+        True,
     )
 
 
@@ -312,3 +313,23 @@ def test_torch_dataset_decodes_video_visual_refs(tmp_path: Path) -> None:
     # check monotonic separation rather than exact pixel values.
     red_means = sample["frames"][:, 0].mean(dim=(1, 2))
     assert float(red_means[2]) > float(red_means[1]) > float(red_means[0])
+
+
+def test_session_split_targets_sequence_fraction_not_session_count() -> None:
+    sessions = ["long", "medium", "short_a", "short_b"]
+    counts = {
+        "long": 700,
+        "medium": 200,
+        "short_a": 50,
+        "short_b": 50,
+    }
+    train, val = _split_sessions(
+        sessions,
+        sequence_counts=counts,
+        val_fraction=0.2,
+        seed=1337,
+    )
+    assert set(train).isdisjoint(val)
+    assert set(train) | set(val) == set(sessions)
+    val_sequences = sum(counts[name] for name in val)
+    assert val_sequences == 200

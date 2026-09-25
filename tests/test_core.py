@@ -25,7 +25,7 @@ def test_planet_adapter_dry_run():
     adapter.execute(JumpAction())
     adapter.execute(StopAction())
     assert ("down", "right") in controller.events
-    assert ("tap", "space") in controller.events
+    assert ("tap", "alt") in controller.events
     assert controller.keys_down == set()
 
 
@@ -76,7 +76,7 @@ def test_planet_adapter_control_state_holds_combined_inputs():
     controller = DryRunInputController()
     adapter = PlanetAdapter(controller)
     adapter.execute(ControlStateAction(move_x=1.0, jump=True, attack=True))
-    assert controller.keys_down == {"right", "space", "ctrl"}
+    assert controller.keys_down == {"right", "alt", "ctrl"}
 
     # Repeating the same frame-level state must not generate repeat key-downs.
     event_count = len(controller.events)
@@ -85,3 +85,20 @@ def test_planet_adapter_control_state_holds_combined_inputs():
 
     adapter.execute(ControlStateAction())
     assert controller.keys_down == set()
+
+
+def test_planet_adapter_uses_recorded_planet_skill_bindings():
+    from agent_core.actions import AbilityAction, InteractAction
+
+    controller = DryRunInputController()
+    adapter = PlanetAdapter(controller)
+    for slot, key in enumerate(("shift", "a", "z", "x")):
+        adapter.execute(AbilityAction(slot))
+        assert ("tap", key) in controller.events
+
+    try:
+        adapter.execute(InteractAction())
+    except RuntimeError as exc:
+        assert "interact binding is not configured" in str(exc)
+    else:
+        raise AssertionError("Unbound Planet interact must not emit a keyboard event")

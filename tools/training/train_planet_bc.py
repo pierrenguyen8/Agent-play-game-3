@@ -20,6 +20,32 @@ from policies.low_level.training_utils import (
     compute_control_balance,
 )
 
+PRIMARY_CONTROL_NAMES = (
+    "left",
+    "right",
+    "up",
+    "down",
+    "jump",       # Alt in Planet
+    "attack",     # Ctrl in Planet
+    "ability_0",  # Shift / teleport in Planet
+)
+
+
+def _mean_f1_for_controls(
+    control_names: tuple[str, ...],
+    metrics: dict[str, object],
+    selected_names: tuple[str, ...],
+) -> float:
+    indices = [
+        control_names.index(name)
+        for name in selected_names
+        if name in control_names
+    ]
+    if not indices:
+        return 0.0
+    f1 = metrics["f1"]
+    return sum(float(f1[index]) for index in indices) / len(indices)
+
 
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -319,6 +345,9 @@ def main() -> None:
         "dataset_dir": str(dataset_dir),
         "output_dir": str(output_dir),
         "control_names": list(control_names),
+        "primary_control_names": [
+            name for name in PRIMARY_CONTROL_NAMES if name in control_names
+        ],
         "dataset_manifest": manifest.to_dict(),
         "model": config.to_dict(),
         "training": {
@@ -361,6 +390,9 @@ def main() -> None:
     best_val = float("inf")
     checkpoint_payload = {
         "control_names": control_names,
+        "primary_control_names": tuple(
+            name for name in PRIMARY_CONTROL_NAMES if name in control_names
+        ),
         "model_config": config.to_dict(),
         "dataset_manifest": manifest.to_dict(),
         "pixelbc_provenance": provenance,
@@ -398,15 +430,22 @@ def main() -> None:
                     "train_controls": _metric_rows(control_names, train_metrics),
                     "val_controls": _metric_rows(control_names, val_metrics),
                 }
+                mean_f1_all = sum(val_metrics["f1"]) / max(len(control_names), 1)
+                primary_f1 = _mean_f1_for_controls(
+                    control_names,
+                    val_metrics,
+                    PRIMARY_CONTROL_NAMES,
+                )
+                record["val_mean_f1_all"] = mean_f1_all
+                record["val_primary_f1"] = primary_f1
                 metrics_file.write(json.dumps(record, ensure_ascii=False) + "\n")
                 metrics_file.flush()
-
-                mean_f1 = sum(val_metrics["f1"]) / max(len(control_names), 1)
                 print(
                     f"Epoch {epoch:03d}: "
                     f"train_loss={train_loss:.5f} "
                     f"val_loss={val_loss:.5f} "
-                    f"val_mean_f1={mean_f1:.4f}"
+                    f"val_primary_f1={primary_f1:.4f} "
+                    f"val_mean_f1_all={mean_f1_all:.4f}"
                 )
 
                 _save_checkpoint(

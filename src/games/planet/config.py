@@ -9,7 +9,9 @@ class PlanetBindings:
     right: str = "right"
     up: str = "up"
     down: str = "down"
-    jump: str = "space"
+    jump: str = "alt"
     attack: str = "ctrl"
-    interact: str = "z"
-    ability_keys: tuple[str, ...] = ("1", "2", "3", "4")
+    interact: str | None = None
+    # Stable low-level slot order for Planet:
+    # 0=teleport (Shift), 1=A skill, 2=Z skill, 3=X skill.
+    ability_keys: tuple[str, ...] = ("shift", "a", "z", "x")

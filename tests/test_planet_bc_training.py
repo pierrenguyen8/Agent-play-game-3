@@ -78,3 +78,22 @@ def test_binary_metrics_per_control() -> None:
     metrics = binary_control_metrics(logits, targets)
     assert metrics["f1"] == [1.0, 1.0]
     assert metrics["accuracy"] == [1.0, 1.0]
+
+
+def test_primary_control_metric_ignores_sparse_auxiliary_heads() -> None:
+    import importlib.util
+
+    script = Path(__file__).resolve().parents[1] / "tools" / "training" / "train_planet_bc.py"
+    spec = importlib.util.spec_from_file_location("train_planet_bc", script)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    names = (
+        "left", "right", "up", "down", "jump", "attack", "interact",
+        "ability_0", "ability_1", "ability_2", "ability_3",
+    )
+    metrics = {"f1": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0]}
+    assert module._mean_f1_for_controls(
+        names, metrics, module.PRIMARY_CONTROL_NAMES
+    ) == 1.0

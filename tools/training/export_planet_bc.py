@@ -57,6 +57,26 @@ def main() -> None:
     print(f"Controls ({len(manifest.control_names)}): {', '.join(manifest.control_names)}")
     print(f"Train sessions: {len(manifest.train_sessions)}")
     print(f"Val sessions: {len(manifest.val_sessions)}")
+
+    # Count exported sequence windows per split so an imbalanced set of session
+    # lengths is visible immediately after export.
+    import json
+    train_set = set(manifest.train_sessions)
+    val_set = set(manifest.val_sessions)
+    train_sequences = 0
+    val_sequences = 0
+    windows_path = result.output_dir / "windows.jsonl"
+    with windows_path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            session_id = str(json.loads(line)["session_id"])
+            if session_id in train_set:
+                train_sequences += 1
+            elif session_id in val_set:
+                val_sequences += 1
+    print(f"Train sequences: {train_sequences}")
+    print(f"Val sequences: {val_sequences}")
     if result.skipped_sessions:
         print("Skipped sessions: " + ", ".join(result.skipped_sessions))
 

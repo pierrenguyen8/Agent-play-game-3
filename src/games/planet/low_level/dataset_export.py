@@ -60,7 +60,9 @@ def _normalize_key(value: object) -> str:
     return str(value).strip().lower()
 
 
-def _binding_is_down(keys_down: Iterable[object], binding: str) -> bool:
+def _binding_is_down(keys_down: Iterable[object], binding: str | None) -> bool:
+    if binding is None:
+        return False
     keys = frozenset(_normalize_key(value) for value in keys_down)
     normalized = _normalize_key(binding)
     accepted = _KEY_ALIASES.get(normalized, frozenset((normalized,)))
@@ -258,18 +260,56 @@ def _windows_for_segment(
 def _split_sessions(
     session_ids: list[str],
     *,
+    sequence_counts: dict[str, int],
     val_fraction: float,
     seed: int,
 ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Split whole sessions while targeting the requested *sequence* fraction.
+
+    Session-level isolation prevents adjacent-frame leakage, but choosing a fixed
+    number of sessions can yield a tiny validation set when recording lengths
+    differ. This deterministic subset-sum selection keeps sessions intact and
+    chooses the validation-session combination whose sequence count is closest
+    to ``val_fraction`` of all sequence windows.
+    """
     ordered = sorted(session_ids)
     if len(ordered) <= 1 or val_fraction <= 0:
         return tuple(ordered), ()
 
     shuffled = ordered.copy()
     random.Random(seed).shuffle(shuffled)
-    val_count = max(1, round(len(shuffled) * val_fraction))
-    val_count = min(val_count, len(shuffled) - 1)
-    val_set = set(shuffled[:val_count])
+    weights = [max(0, int(sequence_counts.get(session, 0))) for session in shuffled]
+    total = sum(weights)
+    if total <= 0:
+        # Defensive fallback; normal exports always have at least one window.
+        val_set = {shuffled[0]}
+    else:
+        target = total * val_fraction
+        # sum -> tuple(indices). Keeping the first path for a sum makes ties
+        # deterministic under the seeded session shuffle.
+        reachable: dict[int, tuple[int, ...]] = {0: ()}
+        for index, weight in enumerate(weights):
+            if weight <= 0:
+                continue
+            updates: dict[int, tuple[int, ...]] = {}
+            for current_sum, selected in tuple(reachable.items()):
+                next_sum = current_sum + weight
+                candidate = selected + (index,)
+                if next_sum not in reachable and next_sum not in updates:
+                    updates[next_sum] = candidate
+            reachable.update(updates)
+
+        valid = [
+            (abs(sequence_sum - target), len(selected), sequence_sum, selected)
+            for sequence_sum, selected in reachable.items()
+            if selected and len(selected) < len(shuffled)
+        ]
+        if not valid:
+            val_set = {shuffled[0]}
+        else:
+            _, _, _, selected = min(valid)
+            val_set = {shuffled[index] for index in selected}
+
     train = tuple(session for session in ordered if session not in val_set)
     val = tuple(session for session in ordered if session in val_set)
     return train, val
@@ -391,8 +431,13 @@ def export_planet_bc_dataset(
             "No sequence windows were produced. Record longer sessions or lower --sequence-length."
         )
 
+    sequence_counts: dict[str, int] = {session: 0 for session in accepted_sessions}
+    for window in all_windows:
+        sequence_counts[window.session_id] = sequence_counts.get(window.session_id, 0) + 1
+
     train_sessions, val_sessions = _split_sessions(
         accepted_sessions,
+        sequence_counts=sequence_counts,
         val_fraction=cfg.val_fraction,
         seed=cfg.split_seed,
     )

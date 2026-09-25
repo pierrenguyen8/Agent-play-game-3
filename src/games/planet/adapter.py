@@ -31,6 +31,8 @@ class PlanetAdapter:
         elif isinstance(action, AttackAction):
             self.controller.tap(self.bindings.attack)
         elif isinstance(action, InteractAction):
+            if self.bindings.interact is None:
+                raise RuntimeError("Planet interact binding is not configured")
             self.controller.tap(self.bindings.interact)
         elif isinstance(action, AbilityAction):
             self.controller.tap(self.bindings.ability_keys[action.slot])
@@ -56,7 +58,8 @@ class PlanetAdapter:
         self._set_held(self.bindings.down, action.move_y > 0)
         self._set_held(self.bindings.jump, action.jump)
         self._set_held(self.bindings.attack, action.attack)
-        self._set_held(self.bindings.interact, action.interact)
+        if self.bindings.interact is not None:
+            self._set_held(self.bindings.interact, action.interact)
 
         if len(action.abilities) > len(self.bindings.ability_keys):
             raise ValueError("Control state has more ability slots than Planet bindings")
